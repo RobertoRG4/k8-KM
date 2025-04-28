@@ -1,4 +1,4 @@
-name: Construir imagen Docker de la API
+name: Build and Push API Docker Image
 
 on:
   push:
@@ -6,38 +6,48 @@ on:
       - main
 
 jobs:
-  build:
+  build-api:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del código
+      # 1. Checkout del código
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Configurar Java 21
-        uses: actions/setup-java@v2
+      # 2. Setup Java 21 con Eclipse Temurin
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'      # Eclipse Temurin es la distro recomendada para JDK21 :contentReference[oaicite:0]{index=0}
           java-version: '21'
-          distribution: 'adoptopenjdk'
 
-      - name: Construir el proyecto con Maven
-        run: mvn clean install -f api/pom.xml
+      # 3. Compilar el proyecto Spring Boot para generar el JAR
+      - name: Build Spring Boot JAR
+        working-directory: api        # Asegúrate de apuntar al directorio que contiene pom.xml
+        run: mvn clean package -DskipTests
 
-      - name: Configurar Docker Buildx
+      # 4. Configurar Buildx para Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Iniciar sesión en Docker Hub
+      # 5. Login a Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Construir la imagen Docker de la API
+      # 6. Construir la imagen Docker usando el Dockerfile dentro de api/
+      - name: Build Docker image for API
         run: |
-          docker build -t myusername/my-api ./api
+          docker build \
+            --file api/Dockerfile \
+            --tag myusername/my-api:latest \
+            api
 
-      - name: Subir la imagen Docker de la API a Docker Hub
-        run: |
-          docker push myusername/my-api
+      # 7. Subir la imagen al registry
+      - name: Push Docker image for API
+        run: docker push myusername/my-api:latest
 
 
 
