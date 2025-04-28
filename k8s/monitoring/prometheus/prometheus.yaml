@@ -1,0 +1,4 @@
+scrape_configs:
+  - job_name: "api-spring"
+    static_configs:
+      - targets: ["api-spring:8080"]
