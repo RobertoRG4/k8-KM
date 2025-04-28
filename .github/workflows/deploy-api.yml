@@ -42,12 +42,12 @@ jobs:
         run: |
           docker build \
             --file api/Dockerfile \
-            --tag myusername/my-api:latest \
+            --tag robertorg/my-api:latest \
             api
 
       # 7. Subir la imagen al registry
       - name: Push Docker image for API
-        run: docker push myusername/my-api:latest
+        run: docker push robertorg/my-api:latest
 
 
 
