@@ -48,6 +48,18 @@ jobs:
       # 7. Subir la imagen al registry
       - name: Push Docker image for API
         run: docker push robertorg/my-api:latest
+        
+      # 8. Ejecutar el contenedor en el runner  
+      - name: Run API container for smoke test
+        run: |
+          docker run -d --name api-test -p 8080:8080 robertorg/my-api:latest
+          # Espera a que esté disponible
+          for i in {1..10}; do
+            if curl -s http://localhost:8080/actuator/health | grep UP; then
+              echo "Container is healthy" && break
+            fi
+            sleep 5
+          done
 
 
 
