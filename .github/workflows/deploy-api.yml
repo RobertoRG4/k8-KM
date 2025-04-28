@@ -1,66 +1,63 @@
-name: Build and Push API Docker Image
+name: Build and Run API Container Locally
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build-api:
+  smoke-test:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout del código
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # 1) Bajar el código
+      - uses: actions/checkout@v2
 
-      # 2. Setup Java 21 con Eclipse Temurin
+      # 2) Setup Java 21 (Temurin)
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'      # Eclipse Temurin es la distro recomendada para JDK21 :contentReference[oaicite:0]{index=0}
+          distribution: temurin
           java-version: '21'
 
-      # 3. Compilar el proyecto Spring Boot para generar el JAR
-      - name: Build Spring Boot JAR
-        working-directory: api        # Asegúrate de apuntar al directorio que contiene pom.xml
+      # 3) Compilar Spring Boot en api/
+      - name: Package API
+        working-directory: api
         run: mvn clean package -DskipTests
 
-      # 4. Configurar Buildx para Docker
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      # 4) Configurar Buildx
+      - uses: docker/setup-buildx-action@v2
 
-      # 5. Login a Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # 6. Construir la imagen Docker usando el Dockerfile dentro de api/
-      - name: Build Docker image for API
+      # 5) Construir la imagen localmente (sin push)
+      - name: Build Docker image
         run: |
           docker build \
             --file api/Dockerfile \
-            --tag robertorg/my-api:latest \
+            --tag api-local:latest \
             api
 
-      # 7. Subir la imagen al registry
-      - name: Push Docker image for API
-        run: docker push robertorg/my-api:latest
-        
-      # 8. Ejecutar el contenedor en el runner  
-      - name: Run API container for smoke test
+      # 6) Levantar el contenedor en el runner
+      - name: Run API container
         run: |
-          docker run -d --name api-test -p 8080:8080 robertorg/my-api:latest
-          # Espera a que esté disponible
+          docker run -d --name api-test -p 8080:8080 api-local:latest
+
+      # 7) Hacer un simple “health check”
+      - name: Smoke test
+        run: |
           for i in {1..10}; do
-            if curl -s http://localhost:8080/actuator/health | grep UP; then
-              echo "Container is healthy" && break
+            if curl -fs http://localhost:8080/actuator/health | grep UP; then
+              echo "✅ API is healthy" && exit 0
             fi
+            echo "Waiting for API… ($i/10)"
             sleep 5
           done
+          echo "❌ API did not start in time" && exit 1
 
+      # 8) (Opcional) Parar y limpiar
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop api-test
+          docker rm api-test
+          docker image rm api-local:latest
 
 
 
