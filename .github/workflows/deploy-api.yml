@@ -13,12 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Establecer Java 21
+      # Establecer Java 21 con Zulu OpenJDK
       - name: Set up JDK 21
         uses: actions/setup-java@v2
         with:
           java-version: '21'
-          distribution: 'adoptopenjdk'  # O 'zulu' si prefieres esa distribución
+          distribution: 'zulu'  # Usar Zulu OpenJDK en lugar de AdoptOpenJDK
 
       - name: Build the project with Maven
         run: mvn clean install  # Esto generará el archivo JAR en 'target'
@@ -43,6 +43,7 @@ jobs:
 
       - name: Push Docker image for Frontend to Docker Hub
         run: docker push myusername/my-frontend
+
 
 
 
