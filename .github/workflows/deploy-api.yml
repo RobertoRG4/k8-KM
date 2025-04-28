@@ -51,13 +51,7 @@ jobs:
           done
           echo "❌ API did not start in time" && exit 1
 
-      # 8) (Opcional) Parar y limpiar
-      - name: Cleanup
-        if: always()
-        run: |
-          docker stop api-test
-          docker rm api-test
-          docker image rm api-local:latest
+ 
 
 
 
