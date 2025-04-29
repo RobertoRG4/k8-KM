@@ -5,7 +5,7 @@ FROM mysql:8.0
 WORKDIR /docker-entrypoint-initdb.d/
 
 # Copiamos el archivo SQL que contiene las instrucciones para crear la base de datos y tablas
-COPY db/init.sql .
+COPY init.sql .
 
 # Exponemos el puerto de MySQL
 EXPOSE 3306
