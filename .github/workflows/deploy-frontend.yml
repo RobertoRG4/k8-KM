@@ -30,10 +30,10 @@ jobs:
         run: |
           docker build \
             --file frontend/Dockerfile \
-            --tag yourdockerhubusername/my-frontend:latest \
+            --tag robertorg/my-frontend:latest \
             frontend
 
       # 5. Publicar la imagen al registry
       - name: Push Docker image for Frontend
         run: |
-          docker push yourdockerhubusername/my-frontend:latest
+          docker push robertorg/my-frontend:latest
