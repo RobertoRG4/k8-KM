@@ -1,24 +1,26 @@
 package com.api.entity;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "auth")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Login {
-    public String getUsername() {
-        return username;
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
+    @Column(name = "username",nullable = false)
     private String username;
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
+    @Column(name ="password",nullable = false)
     private String password;
 }
 
