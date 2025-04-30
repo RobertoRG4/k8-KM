@@ -25,6 +25,22 @@ services:
     networks:
       - k8-net
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: robertorg/my-frontend:latest
+    container_name: nextjs-frontend
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      # Si necesitara alguna variable, p. ej. la URL base de la API:
+      NEXT_PUBLIC_API_URL: http://spring-api:8080
+    networks:
+      - k8-net
+
 volumes:
   datos_app:
 
