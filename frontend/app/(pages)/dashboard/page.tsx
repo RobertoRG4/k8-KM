@@ -186,36 +186,43 @@ const Page = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {items.map((item) => (
-                  <Table.Row key={item.id}>
-                    <Table.Cell>{item.name}</Table.Cell>
-                    <Table.Cell>{item.category}</Table.Cell>
-                    <Table.Cell>$ {item.price}</Table.Cell>
-                    <Table.Cell maxW="80px">
-                      <Button
-                        onClick={handleOnClick}
-                        id="delete"
-                        background="red.400"
-                        borderRadius="4xl"
-                        _dark={{ color: "white" }}
-                        data-item-id={item.id}
-                      >
-                        <FaTrash style={{ pointerEvents: "none" }} />
-                      </Button>
-                      <Button
-                        onClick={handleOnClick}
-                        data-item-id={item.id}
-                        id="edit"
-                        background="blue.400"
-                        borderRadius="4xl"
-                        marginX="20px"
-                        _dark={{ color: "white" }}
-                      >
-                        <FaPencilAlt style={{ pointerEvents: "none" }} />
-                      </Button>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
+                {items.map(
+                  (item: {
+                    id: number;
+                    name: string;
+                    category: string;
+                    price: number;
+                  }) => (
+                    <Table.Row key={item.id}>
+                      <Table.Cell>{item.name}</Table.Cell>
+                      <Table.Cell>{item.category}</Table.Cell>
+                      <Table.Cell>$ {item.price}</Table.Cell>
+                      <Table.Cell maxW="80px">
+                        <Button
+                          onClick={handleOnClick}
+                          id="delete"
+                          background="red.400"
+                          borderRadius="4xl"
+                          _dark={{ color: "white" }}
+                          data-item-id={item.id}
+                        >
+                          <FaTrash style={{ pointerEvents: "none" }} />
+                        </Button>
+                        <Button
+                          onClick={handleOnClick}
+                          data-item-id={item.id}
+                          id="edit"
+                          background="blue.400"
+                          borderRadius="4xl"
+                          marginX="20px"
+                          _dark={{ color: "white" }}
+                        >
+                          <FaPencilAlt style={{ pointerEvents: "none" }} />
+                        </Button>
+                      </Table.Cell>
+                    </Table.Row>
+                  )
+                )}
               </Table.Body>
             </Table.Root>
           </Table.ScrollArea>
