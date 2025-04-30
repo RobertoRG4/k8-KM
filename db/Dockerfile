@@ -1,5 +1,5 @@
 # Usamos la imagen oficial de MySQL
-FROM mysql:8.0
+FROM mysql:9.0
 
 # Establecemos el directorio de trabajo
 WORKDIR /docker-entrypoint-initdb.d/
