@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   db:
     image: robertorg/sql-database:latest
@@ -18,7 +19,6 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Estas variables se usan para sobrescribir tu application.properties si las referiste como ${…}:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/k8
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -36,13 +36,40 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Si necesitara alguna variable, p. ej. la URL base de la API:
       NEXT_PUBLIC_API_URL: http://spring-api:8080
+    networks:
+      - k8-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./k8s/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+    networks:
+      - k8-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus
     networks:
       - k8-net
 
 volumes:
   datos_app:
+  grafana-storage:
 
 networks:
   k8-net:
