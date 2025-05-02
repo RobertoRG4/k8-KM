@@ -38,5 +38,12 @@ public class ItemsControler {
             return new ResponseEntity<>(new ApiResponse<>(null, LocalDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @GetMapping("/item/{id}")
+    public Item getItem(@PathVariable Long id){
+        return itemdao.getItem(id);
+    }
+    @DeleteMapping("/item/{id}")
+    public void deleteItem(@PathVariable Long id){
+        itemdao.deleteItem(id);
+    }
 }

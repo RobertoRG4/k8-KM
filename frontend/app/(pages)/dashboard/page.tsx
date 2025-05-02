@@ -16,45 +16,103 @@ import { redirect } from "next/navigation";
 import { MdLogout } from "react-icons/md";
 import { FaTrash, FaPencilAlt } from "react-icons/fa";
 import { ColorModeButton } from "@/components/ui/color-mode";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+interface Item {
+  action: string;
+  itemId: string;
+}
+
 const Page = () => {
   const [modelTitle, setModalTitle] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [items, setItems] = useState([]);
+  const [item, setItem] = useState<Item>({ action: "", itemId: "" });
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [price, setPrice] = useState(0);
 
   const logout = () => {
-    const response = fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/logout`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/logout`, {
       method: "POST",
       credentials: "include",
-    });
-    response.then((res) => {
-      if (res.ok) {
-        redirect("/login");
-      } else {
-        alert("Error 404");
-      }
+    }).then((res) => {
+      if (res.ok) redirect("/login");
+      else alert("Error 404");
     });
   };
-  const handleOnClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const target = event.currentTarget;
-    const action = target.id;
-    const itemId = target.dataset.itemId;
 
+  const deleteItem = () => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/item/${item.itemId}`, {
+      method: "DELETE",
+      credentials: "include",
+    }).then((res) => {
+      if (res.ok) window.location.reload();
+      else alert("Error 404");
+    });
+  };
+
+  const editItem = () => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/item/${item.itemId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name, price, category }),
+    }).then((res) => {
+      if (res.ok) window.location.reload();
+    });
+  };
+
+  const getItem = async (itemId: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/item/${itemId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+      if (!response.ok) {
+        console.error("Error al obtener el ítem:", response.statusText);
+        return;
+      }
+      const data = await response.json();
+      setName(data.name);
+      setCategory(data.category);
+      setPrice(data.price);
+      console.log("Item cargado:", data);
+    } catch (error) {
+      console.error("Error en getItem:", error);
+    }
+  };
+
+  const handleOnEdit = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { id, value } = event.target;
+      if (id === "name") setName(value);
+      if (id === "category") setCategory(value);
+      if (id === "price") setPrice(parseFloat(value) || 0);
+    },
+    []
+  );
+
+  const handleOnClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    const action = event.currentTarget.id as "edit" | "delete";
+    const itemId = event.currentTarget.dataset.itemId;
     if (!itemId) return;
 
-    switch (action) {
-      case "delete":
-        setModalTitle("Delete");
-        console.log(`Borrando item con id ${itemId}`);
-        break;
-      case "edit":
-        setModalTitle("Edit");
-        console.log(`Editando item con id ${itemId}`);
-        break;
-      default:
-        break;
-    }
+    setName("");
+    setCategory("");
+    setPrice(0);
+
+    setItem({ action, itemId });
+    setModalTitle(action === "edit" ? "Edit" : "Delete");
     setIsOpen(true);
+
+    if (action === "edit") {
+      await getItem(itemId);
+    }
   };
 
   useEffect(() => {
@@ -67,42 +125,29 @@ const Page = () => {
             headers: { "Content-Type": "application/json" },
           }
         );
-
         if (response.ok) {
           const data = await response.json();
           setItems(data);
-        } else {
-          console.log("Error fetching items");
         }
       } catch (error) {
         console.error("Error:", error);
       }
     };
-
     getItems();
   }, []);
 
   return (
     <Box overflow="hidden">
-      <nav
-        style={{
-          margin: "30px",
-          paddingBottom: "20px",
-        }}
-      >
+      <nav style={{ margin: 30, paddingBottom: 20 }}>
         <Flex justify="space-between" align="center">
-          <Heading size="2xl" marginX="20px">
+          <Heading size="2xl" mx={5}>
             ElectroWorld S.A
           </Heading>
           <Box>
-            <ColorModeButton
-              _dark={{ bg: "white", color: "black" }}
-              w="50px"
-              backgroundColor="gray.200"
-            />
+            <ColorModeButton _dark={{ bg: "white", color: "black" }} w="50px" />
             <Button
               variant="solid"
-              marginX="20px"
+              mx={5}
               onClick={logout}
               color="white"
               bg="green.400"
@@ -112,11 +157,9 @@ const Page = () => {
           </Box>
         </Flex>
       </nav>
-      <Flex justifyContent="center">
+
+      <Flex justify="center">
         <Dialog.Root
-          size="lg"
-          placement="center"
-          motionPreset="slide-in-bottom"
           open={isOpen}
           onOpenChange={() => setIsOpen((prev) => prev)}
         >
@@ -127,97 +170,105 @@ const Page = () => {
                 <Dialog.Header>
                   <Dialog.Title>{modelTitle}</Dialog.Title>
                 </Dialog.Header>
-
                 <Dialog.CloseTrigger asChild>
                   <CloseButton
                     size="sm"
                     position="absolute"
                     top="4"
                     right="4"
-                    _hover={{ bg: "gray.400", color: "#fff" }}
-                    onClick={() => setIsOpen((prev) => !prev)}
+                    onClick={() => setIsOpen(false)}
                   />
                 </Dialog.CloseTrigger>
-                {modelTitle === "Delete" ? (
-                  <Dialog.Body>
-                    <Text fontSize="xl" textAlign="center">
-                      ¿Estás seguro de que deseas eliminar este ítem?
-                    </Text>
-                    <Flex justifyContent="space-between" paddingTop="20px">
-                      <Button bg="red.400">Confirmar</Button>
-                      <Button onClick={() => setIsOpen((prev) => !prev)}>
-                        Cancelar
-                      </Button>
-                    </Flex>
-                  </Dialog.Body>
-                ) : (
-                  <Dialog.Body>
+
+                <Dialog.Body>
+                  {modelTitle === "Delete" ? (
+                    <>
+                      <Text fontSize="xl" textAlign="center">
+                        ¿Estás seguro de que deseas eliminar este ítem?
+                      </Text>
+                      <Flex justify="space-between" pt={4}>
+                        <Button colorScheme="red" onClick={deleteItem}>
+                          Confirmar
+                        </Button>
+                        <Button onClick={() => setIsOpen(false)}>
+                          Cancelar
+                        </Button>
+                      </Flex>
+                    </>
+                  ) : (
                     <form>
                       <Field.Root>
                         <Field.Label>Name</Field.Label>
-                        <Input type="text" id="name" />
+                        <Input id="name" value={name} onChange={handleOnEdit} />
                         <Field.Label>Category</Field.Label>
-                        <Input type="text" id="category" />
+                        <Input
+                          id="category"
+                          value={category}
+                          onChange={handleOnEdit}
+                        />
                         <Field.Label>Price</Field.Label>
-                        <Input type="number" id="price" step="0.01" />
+                        <Input
+                          id="price"
+                          type="number"
+                          step="0.01"
+                          value={price}
+                          onChange={handleOnEdit}
+                        />
                       </Field.Root>
-
-                      <Flex justifyContent="space-between" paddingTop="20px">
-                        <Button>Guardar</Button>
-                        <Button>Cancelar</Button>
+                      <Flex justify="space-between" pt={4}>
+                        <Button onClick={editItem}>Guardar</Button>
+                        <Button onClick={() => setIsOpen(false)}>
+                          Cancelar
+                        </Button>
                       </Flex>
                     </form>
-                  </Dialog.Body>
-                )}
+                  )}
+                </Dialog.Body>
               </Dialog.Content>
             </Dialog.Positioner>
           </Portal>
         </Dialog.Root>
 
-        <Box width="80vw" height="80vh">
-          <Table.ScrollArea borderWidth="1px" rounded="md" height="80vh">
+        <Box w="80vw" h="80vh">
+          <Table.ScrollArea borderWidth="1px" rounded="md" h="80vh">
             <Table.Root variant="outline">
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeader>Product</Table.ColumnHeader>
                   <Table.ColumnHeader>Category</Table.ColumnHeader>
                   <Table.ColumnHeader>Price</Table.ColumnHeader>
-                  <Table.ColumnHeader maxW="100px">Options</Table.ColumnHeader>
+                  <Table.ColumnHeader>Options</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {items.map(
-                  (item: {
+                  (it: {
                     id: number;
                     name: string;
                     category: string;
                     price: number;
                   }) => (
-                    <Table.Row key={item.id}>
-                      <Table.Cell>{item.name}</Table.Cell>
-                      <Table.Cell>{item.category}</Table.Cell>
-                      <Table.Cell>$ {item.price}</Table.Cell>
-                      <Table.Cell maxW="80px">
+                    <Table.Row key={it.id}>
+                      <Table.Cell>{it.name}</Table.Cell>
+                      <Table.Cell>{it.category}</Table.Cell>
+                      <Table.Cell>$ {it.price}</Table.Cell>
+                      <Table.Cell>
                         <Button
-                          onClick={handleOnClick}
                           id="delete"
-                          background="red.400"
-                          borderRadius="4xl"
-                          _dark={{ color: "white" }}
-                          data-item-id={item.id}
+                          data-item-id={it.id}
+                          onClick={handleOnClick}
+                          bg="red.400"
+                          mr={2}
                         >
-                          <FaTrash style={{ pointerEvents: "none" }} />
+                          <FaTrash style={{ color: "#fff" }} />
                         </Button>
                         <Button
-                          onClick={handleOnClick}
-                          data-item-id={item.id}
                           id="edit"
-                          background="blue.400"
-                          borderRadius="4xl"
-                          marginX="20px"
-                          _dark={{ color: "white" }}
+                          data-item-id={it.id}
+                          onClick={handleOnClick}
+                          bg="blue.300"
                         >
-                          <FaPencilAlt style={{ pointerEvents: "none" }} />
+                          <FaPencilAlt style={{ color: "#fff" }} />
                         </Button>
                       </Table.Cell>
                     </Table.Row>
@@ -231,4 +282,5 @@ const Page = () => {
     </Box>
   );
 };
+
 export default Page;

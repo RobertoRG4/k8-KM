@@ -33,4 +33,15 @@ public class ItemDaoImplement implements ItemDao {
 
         return entityManager.merge(optionalItem);
     }
+    @Override
+    public Item getItem(Long id){
+        return entityManager.find(Item.class, id);
+    }
+    @Override
+    public void deleteItem(Long id) {
+        Item entity = entityManager.find(Item.class, id);
+        if (entity != null) {
+            entityManager.remove(entity);
+        }
+    }
 }

@@ -1,7 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Box, Field, Input, Flex, Heading, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Field,
+  Input,
+  Flex,
+  Heading,
+  Button,
+  useEditable,
+} from "@chakra-ui/react";
 import { InputGroup } from "@chakra-ui/react";
 import { LuUser } from "react-icons/lu";
 import { redirect } from "next/navigation";
@@ -40,6 +48,7 @@ const Page = () => {
         break;
     }
   };
+
   return (
     <Box minHeight="100vh">
       <Flex
