@@ -41,7 +41,7 @@ Con los servicios corriendo, ejecuta:
 kubectl apply -f .
 ```
 
-> > Asegúrate de tener un clúster de Kubernetes activo (por ejemplo, usando Minikube o Docker Desktop con Kubernetes habilitado).
+> Asegúrate de tener un clúster de Kubernetes activo (por ejemplo, usando Minikube o Docker Desktop con Kubernetes habilitado).
 
 ## 🛠 Tecnologías utilizadas
 
